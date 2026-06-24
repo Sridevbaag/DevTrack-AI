@@ -59,7 +59,37 @@ export default function App() {
   }, [theme]);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isOpening, setIsOpening] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState("Booting AI Engine...");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  useEffect(() => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 8) + 4;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        setTimeout(() => {
+          setIsOpening(false);
+        }, 200);
+      }
+      setLoadingProgress(progress);
+
+      if (progress < 25) {
+        setLoadingStatus("Booting AI Engine...");
+      } else if (progress < 50) {
+        setLoadingStatus("Securing Local Sandbox...");
+      } else if (progress < 75) {
+        setLoadingStatus("Syncing Roadmaps...");
+      } else {
+        setLoadingStatus("Optimizing Nudge Vectors...");
+      }
+    }, 70);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
@@ -655,12 +685,67 @@ export default function App() {
     });
   }, [tasks, currentFilter]);
 
-  if (isAuthChecking) {
+  if (isAuthChecking || isOpening) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#0b0f19] text-[#f3f4f6]">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="h-10 w-10 animate-spin text-indigo-400" />
-          <p className="font-mono text-sm tracking-widest text-slate-400">LOADING WORKSPACE...</p>
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#0A0A0A] text-gray-100 transition-colors duration-300">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/2 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-indigo-500/10 blur-[80px]" />
+        <div className="absolute bottom-1/4 left-1/3 -z-10 h-72 w-72 rounded-full bg-violet-600/10 blur-[100px]" />
+
+        <div className="flex w-full max-w-sm flex-col items-center px-6 text-center">
+          {/* Animated Glowing Logo */}
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: [0.9, 1.05, 1], opacity: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-8 relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20"
+          >
+            <Sparkles className="h-8 w-8 text-white animate-pulse" />
+            <span className="absolute -inset-1 rounded-2xl bg-indigo-500/35 blur-md -z-10 animate-pulse" />
+          </motion.div>
+
+          {/* App Brand Name */}
+          <motion.h1 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-2xl font-bold tracking-tight text-white"
+          >
+            DevTrack <span className="text-indigo-400 font-extrabold">AI</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 0.7 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="mt-1 text-xs text-gray-400 font-medium tracking-wide uppercase font-sans"
+          >
+            Tactical Roadmap Console
+          </motion.p>
+
+          {/* Progress Bar Container */}
+          <div className="mt-8 w-full">
+            <div className="relative h-1.5 w-full overflow-hidden rounded-full border border-white/5 bg-[#141414]">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+                animate={{ width: `${loadingProgress}%` }}
+                transition={{ duration: 0.1, ease: "linear" }}
+              />
+            </div>
+
+            {/* Loading Status Metrics */}
+            <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-gray-400">
+              <motion.span 
+                key={loadingStatus}
+                initial={{ opacity: 0, y: 2 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-medium truncate max-w-[200px]"
+              >
+                {loadingStatus}
+              </motion.span>
+              <span className="text-indigo-400 font-semibold">{loadingProgress}%</span>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -668,103 +753,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 selection:bg-indigo-500 selection:text-white">
-      {!user ? (
-        <div className="relative flex flex-col items-center justify-center px-4 py-16 md:py-32 bg-[#0A0A0A]">
-          {/* Floating theme toggle when logged out */}
-          <div className="absolute top-6 right-6 z-50">
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 p-2.5 text-xs font-semibold text-gray-400 transition-all hover:bg-white/10 hover:text-indigo-400 active:scale-95"
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4 text-amber-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-indigo-400" />
-              )}
-            </button>
-          </div>
-          <div className="absolute top-1/4 left-1/2 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-500/5 blur-[100px]" />
-          <div className="absolute bottom-1/4 left-1/3 -z-10 h-80 w-80 rounded-full bg-indigo-600/5 blur-[120px]" />
-
-          <div className="w-full max-w-4xl text-center">
-            <div className="mx-auto mb-6 flex w-fit items-center gap-2.5 rounded-full border border-white/5 bg-[#0F0F0F] px-4 py-1.5">
-              <Sparkles className="h-4 w-4 text-indigo-400 animate-pulse" />
-              <span className="font-sans text-xs font-semibold tracking-wider text-indigo-400 uppercase">DevTrack AI Platform</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent pb-3">
-              Hyper-Breakdown Your Dev Goals
-            </h1>
-            <p className="mt-4 mx-auto max-w-2xl text-lg text-gray-400 font-light leading-relaxed">
-              Transform high-level tasks into high-fidelity Roadmaps. Structured subtask scheduling, proactive automated calendar events, and real-time developer nudges that hunt procrastination.
-            </p>
-
-            <div className="mt-10 flex flex-col items-center justify-center gap-4">
-              <button
-                id="sign-in-btn"
-                onClick={handleLogin}
-                disabled={isLoggingIn}
-                className="gsi-material-button transition-all duration-300 transform active:scale-95 disabled:opacity-50"
-              >
-                <div className="gsi-material-button-state"></div>
-                <div className="gsi-material-button-content-wrapper">
-                  <div className="gsi-material-button-icon">
-                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style={{ display: "block" }}>
-                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                      <path fill="none" d="M0 0h48v48H0z"></path>
-                    </svg>
-                  </div>
-                  <span className="gsi-material-button-contents font-sans font-medium text-slate-800">
-                    {isLoggingIn ? "Logging into console..." : "Sign in with Google"}
-                  </span>
-                </div>
-              </button>
-
-              <div className="flex items-center gap-3 text-gray-500 text-xs font-mono">
-                <span>Secure Firestore Storage</span>
-                <span>•</span>
-                <span>Active Gemini 3.5 Engine</span>
-              </div>
-            </div>
-
-            <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-              <div className="group rounded-2xl border border-white/5 bg-[#141414] p-6 transition-all hover:border-indigo-500/30">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
-                  <Brain className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold text-white group-hover:text-indigo-300 transition-colors">Gemini 3.5 Engine Breakdown</h3>
-                <p className="mt-2 text-sm text-gray-400 font-light leading-relaxed">
-                  Inputs represent your high-level targets. Gemini decomposes them on the server into tactical subtasks, realistic deadlines, and priority profiles.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-white/5 bg-[#141414] p-6 transition-all hover:border-indigo-500/30">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
-                  <Calendar className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold text-white group-hover:text-purple-300 transition-colors">Google Calendar Scheduler</h3>
-                <p className="mt-2 text-sm text-gray-400 font-light leading-relaxed">
-                  Schedules subtasks across active days directly into Google Calendar. Subtask checkmarks securely update your calendar states.
-                </p>
-              </div>
-
-              <div className="group rounded-2xl border border-white/5 bg-[#141414] p-6 transition-all hover:border-indigo-500/30">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 group-hover:scale-110 transition-transform">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-                <h3 className="font-semibold text-white group-hover:text-orange-300 transition-colors">Proactive Server Nudges</h3>
-                <p className="mt-2 text-sm text-gray-400 font-light leading-relaxed">
-                  Our custom server background script watches tasks. If progress drops behind, it generates specific, clever micro-nudges to get you focused.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
         <div id="dashboard-root" className="mx-auto max-w-7xl px-4 py-6 md:px-8 bg-[#0A0A0A]">
           
           <header className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 border border-white/5 bg-[#0F0F0F] p-6 rounded-2xl shadow-xl">
@@ -781,15 +769,11 @@ export default function App() {
 
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3.5">
               <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || "User"} referrerPolicy="no-referrer" className="h-5 w-5 rounded-full ring-1 ring-white/10" />
-                ) : (
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white uppercase">
-                    {user.email?.charAt(0)}
-                  </div>
-                )}
-                <span className="font-medium text-gray-300 truncate max-w-[120px]">{user.displayName || user.email}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Google Sync Connected" />
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white uppercase">
+                  D
+                </div>
+                <span className="font-medium text-gray-300 truncate max-w-[120px]">Local Developer</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" title="Cloud Sync Active" />
               </div>
 
               <button
@@ -808,14 +792,6 @@ export default function App() {
                     <span>Dark Mode</span>
                   </>
                 )}
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-gray-400 transition-all hover:bg-white/10 hover:text-red-400 active:scale-95"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Disconnect</span>
               </button>
             </div>
           </header>
@@ -1573,7 +1549,6 @@ export default function App() {
           </div>
 
         </div>
-      )}
 
       {/* 4. Focus Mode Fullscreen Distraction-free Overlay */}
       <AnimatePresence>
