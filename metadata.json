@@ -1,0 +1,6 @@
+{
+  "name": "DevTrack AI",
+  "description": "Full-stack productivity workspace that breaks down tasks using Gemini, schedules them to Google Calendar, and generates proactive nudges.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
