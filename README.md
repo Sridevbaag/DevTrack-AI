@@ -20,7 +20,7 @@ Track: **"The Last-Minute Life Saver"**
 <br/>
 
 <div align="center">
-  <img src="assets/devtrack-ai-dashboard.png" alt="DevTrack AI dashboard screenshot" width="850"/>
+  <img src="public/devtrack-ai-dashboard.png" alt="DevTrack AI dashboard screenshot" width="850"/>
 </div>
 
 <br/>
